@@ -1,26 +1,25 @@
-import { NetworkFeatureIndex } from '@/features/network/network-feature-index'
-import { AccountFeatureIndex } from '@/features/account/account-feature-index'
-import { AppConfig } from '@/constants/app-config'
-import { Text, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import React from 'react'
+import { Text, View, SafeAreaView, TouchableOpacity } from 'react-native'
+import { useRouter } from 'expo-router'
 import { appStyles } from '@/constants/app-styles'
+import { COLORS } from '@/constants/app-styles'
 
 export default function HomeScreen() {
+  const router = useRouter()
+
   return (
     <SafeAreaView style={appStyles.screen}>
       <View style={appStyles.stack}>
-        <Text style={appStyles.title}>App Config</Text>
-        <View style={appStyles.card}>
-          <Text>
-            Name <Text style={{ fontWeight: 'bold' }}>{AppConfig.identity.name}</Text>
+        <Text style={appStyles.title}>Quilldeck</Text>
+        <Text style={appStyles.subtitle}>Publish Smarter. Market Faster.</Text>
+        <TouchableOpacity
+          style={{ backgroundColor: '#E8A838', padding: 16, borderRadius: 12, marginTop: 32 }}
+          onPress={() => router.push('/blurb-generator')}
+        >
+          <Text style={{ color: '#0F0F1A', fontWeight: 'bold', textAlign: 'center', fontSize: 16 }}>
+            ✨ AI Blurb Generator
           </Text>
-          <Text>
-            URL <Text style={{ fontWeight: 'bold' }}>{AppConfig.identity.uri}</Text>
-          </Text>
-        </View>
-        <AccountFeatureIndex />
-        <NetworkFeatureIndex />
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   )

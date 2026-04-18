@@ -1,3 +1,6 @@
-import { install } from 'react-native-quick-crypto'
+import { install } from 'react-native-quick-crypto';
+import { Buffer } from 'buffer';
 
-install()
+install();
+
+global.Buffer = global.Buffer ?? Buffer;

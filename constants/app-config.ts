@@ -1,20 +1,20 @@
-import { AppIdentity, createSolanaDevnet, createSolanaTestnet } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
-import { SolanaCluster } from '@solana/web3.js';
-
 export class AppConfig {
-  static identity: AppIdentity = { name: 'Quilldeck' }
-  static networks: SolanaCluster[] = [
-    createSolanaDevnet({ url: 'https://api.devnet.solana.com' }),
-    createSolanaTestnet({ url: 'https://api.testnet.solana.com' })
+  static identity = { name: 'Quilldeck' }
+  static networks = [
+    { 
+      endpoint: 'https://api.devnet.solana.com',
+      label: 'Devnet',
+      name: 'devnet'
+    },
+    { 
+      endpoint: 'https://api.testnet.solana.com',
+      label: 'Testnet', 
+      name: 'testnet'
+    }
   ]
 
-  // Free tier limits
   static FREE_BLURB_LIMIT = 3;
   static FREE_MARKETING_LIMIT = 1;
-
-  // Subscription price in USDC
   static SUBSCRIPTION_PRICE_USDC = 4.99;
-
-  // API
   static API_BASE_URL = 'https://quilldeck-api.vercel.app/api';
 }
