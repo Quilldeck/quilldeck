@@ -11,13 +11,19 @@ const COLORS = {
 
 const API_URL = "https://quilldeck-api.vercel.app/api/generate-blurb";
 
+interface Blurb {
+  variant: number;
+  hook: string;
+  text: string;
+}
+
 export default function BlurbGenerator() {
   const [title, setTitle] = useState("");
   const [genre, setGenre] = useState("");
   const [synopsis, setSynopsis] = useState("");
-  const [blurbs, setBlurbs] = useState([]);
+  const [blurbs, setBlurbs] = useState<Blurb[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const generateBlurbs = async () => {
     setLoading(true);
@@ -41,16 +47,16 @@ export default function BlurbGenerator() {
     <ScrollView style={styles.container}>
       <Text style={styles.heading}>AI Blurb Generator</Text>
       <TextInput style={styles.input} placeholder="Book Title" placeholderTextColor="#888" value={title} onChangeText={setTitle} />
-      <TextInput style={styles.input} placeholder="Genre (e.g. Afroeurofantasy)" placeholderTextColor="#888" value={genre} onChangeText={setGenre} />
+      <TextInput style={styles.input} placeholder="Genre" placeholderTextColor="#888" value={genre} onChangeText={setGenre} />
       <TextInput style={styles.input} placeholder="Synopsis (2-3 sentences)" placeholderTextColor="#888" value={synopsis} onChangeText={setSynopsis} multiline numberOfLines={4} />
       <TouchableOpacity style={styles.button} onPress={generateBlurbs} disabled={loading}>
         <Text style={styles.buttonText}>{loading ? "Generating..." : "Generate Blurbs"}</Text>
       </TouchableOpacity>
       {loading && <ActivityIndicator color={COLORS.accent} size="large" style={{ marginTop: 24 }} />}
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error ? <Text style={styles.error}>{error}</Text> : null}
       {blurbs.map((blurb, index) => (
         <View key={index} style={styles.card}>
-          <Text style={styles.hook}>{blurb.hook?.toUpperCase()} HOOK</Text>
+          <Text style={styles.hook}>{blurb.hook.toUpperCase()} HOOK</Text>
           <Text style={styles.blurbText}>{blurb.text}</Text>
         </View>
       ))}
