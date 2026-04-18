@@ -36,7 +36,11 @@ export const appStyles = StyleSheet.create({
   stack: {
     gap: 8,
   },
-  title: {
+  subtitle: {
+      fontSize: 16,
+      color: COLORS.textMuted,
+    },
+    title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: COLORS.text,
