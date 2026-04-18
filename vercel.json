@@ -1,0 +1,1 @@
+{"version":2,"builds":[{"src":"quilldeck-api/api/*.ts","use":"@vercel/node"}],"routes":[{"src":"/api/(.*)","dest":"/quilldeck-api/api/$1"}]}
