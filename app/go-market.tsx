@@ -77,6 +77,7 @@ export default function GoMarketScreen() {
   const [genre, setGenre] = useState("");
   const [blurb, setBlurb] = useState("");
   const [launchDate, setLaunchDate] = useState("");
+  const [website, setWebsite] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<MarketingPackage | null>(null);
   const [activeTab, setActiveTab] = useState("Social");
@@ -93,7 +94,7 @@ export default function GoMarketScreen() {
       const response = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, genre, blurb, launchDate }),
+        body: JSON.stringify({ title, genre, blurb, launchDate, website }),
       });
       const data = await response.json();
       if (data.error) throw new Error(data.error);
@@ -243,6 +244,16 @@ export default function GoMarketScreen() {
           placeholderTextColor={COLORS.textMuted}
           value={launchDate}
           onChangeText={setLaunchDate}
+          
+<TextInput
+  style={styles.input}
+  placeholder="Author website (e.g. https://yourname.com)"
+  placeholderTextColor={COLORS.textMuted}
+  value={website}
+  onChangeText={setWebsite}
+  autoCapitalize="none"
+  keyboardType="url"
+/>
         />
 
         <TouchableOpacity

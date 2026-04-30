@@ -1,0 +1,3 @@
+﻿content = "// Top-level build file\nbuildscript {\n ext {\n buildToolsVersion = \"35.0.0\"\n minSdkVersion = 24\n compileSdkVersion = 36\n targetSdkVersion = 36\n ndkVersion = \"27.1.12297006\"\n kotlinVersion = \"2.1.20\"\n }\n repositories {\n google()\n mavenCentral()\n }\n dependencies {\n classpath(\"com.android.tools.build:gradle\")\n classpath(\"com.facebook.react:react-native-gradle-plugin\")\n classpath(\"org.jetbrains.kotlin:kotlin-gradle-plugin\")\n }\n}\n\napply plugin: \"com.facebook.react.rootproject\"\n"
+open("android/build.gradle", "w", encoding="utf-8").write(content)
+print("Done, length:", len(content))
