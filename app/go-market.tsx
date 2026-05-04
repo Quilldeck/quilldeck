@@ -244,6 +244,7 @@ export default function GoMarketScreen() {
           placeholderTextColor={COLORS.textMuted}
           value={launchDate}
           onChangeText={setLaunchDate}
+          />
           
 <TextInput
   style={styles.input}
@@ -254,7 +255,7 @@ export default function GoMarketScreen() {
   autoCapitalize="none"
   keyboardType="url"
 />
-        />
+
 
         <TouchableOpacity
           style={[styles.generateBtn, loading && styles.generateBtnDisabled]}
