@@ -46,9 +46,7 @@ export default function BlurbGeneratorScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const generateBlurbs = async () => {
-    if (!title.trim() || !genre.trim() || !synopsis.trim()) {
-      return;
-    }
+    
     setLoading(true);
     setBlurbs([]);
     try {
