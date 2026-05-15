@@ -18,10 +18,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.taoscope.quilldeck",
-      "compileSdkVersion": 34,
-      "targetSdkVersion": 34,
-      "buildToolsVersion": "34.0.0"
+      "package": "com.taoscope.quilldeck"
     },
     "web": {
       "output": "static",
@@ -42,7 +39,8 @@
           }
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-image"
     ],
     "experiments": {
       "reactCompiler": true,
