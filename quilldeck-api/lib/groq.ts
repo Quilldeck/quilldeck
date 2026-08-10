@@ -77,6 +77,11 @@ export async function generateJson<T>(prompt: string, maxTokens: number): Promis
       body: JSON.stringify({
         model: MODEL,
         max_tokens: maxTokens,
+        // Constrain the model to emit a JSON object, which stops the
+        // conversational replies the parse guard below otherwise has to catch.
+        // Groq requires the prompt itself to mention JSON; both callers build
+        // prompts that do, and Groq answers 400 if that ever stops being true.
+        response_format: { type: 'json_object' },
         messages: [{ role: 'user', content: prompt }],
       }),
     });
