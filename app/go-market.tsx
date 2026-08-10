@@ -63,10 +63,18 @@ const [genre, setGenre] = useState('');
   const [pkg, setPkg] = useState<MarketingPackage | null>(null);
   const [activeTab, setActiveTab] = useState('Social');
   const [copied, setCopied] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
 
   const generate = async () => {
-    if (!title.trim() || !genre.trim()) return;
+    if (!title.trim() || !genre.trim()) {
+      setError('Add a book title and pick a genre first.');
+      setErrorDetail(null);
+      return;
+    }
     setLoading(true);
+    setError(null);
+    setErrorDetail(null);
     setPkg(null);
     try {
       const response = await fetch(API_URL, {
@@ -116,13 +124,26 @@ Respond in valid JSON only (no markdown):
 }`,
         }),
       });
-      const data = await response.json();
-      if (data.socialPosts) {
-        setPkg(data);
-        setActiveTab('Social');
+      // The API reports failures as JSON, but a crash or gateway error can
+      // still return HTML, so never assume the body parses.
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        setError(data?.error ?? `The server returned an error (${response.status}).`);
+        setErrorDetail(data?.detail ?? null);
+        return;
       }
-    } catch (error) {
-      console.error('Generation failed:', error);
+
+      if (!data?.socialPosts?.length) {
+        setError('The response came back without a marketing plan.');
+        return;
+      }
+
+      setPkg(data);
+      setActiveTab('Social');
+    } catch (err: any) {
+      setError("Couldn't reach the server. Check your connection and try again.");
+      setErrorDetail(err?.message ?? null);
     } finally {
       setLoading(false);
     }
@@ -204,6 +225,17 @@ Respond in valid JSON only (no markdown):
               ) : (
                 <Text style={styles.generateBtnText}>⚡ Go Market This</Text>
               )}
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Error */}
+        {error && (
+          <View style={styles.errorCard}>
+            <Text style={styles.errorTitle}>⚠ {error}</Text>
+            {errorDetail ? <Text style={styles.errorDetail}>{errorDetail}</Text> : null}
+            <TouchableOpacity style={styles.errorRetry} onPress={generate} activeOpacity={0.85}>
+              <Text style={styles.errorRetryText}>Try again</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -410,6 +442,12 @@ const styles = StyleSheet.create({
   generateBtnDisabled: { opacity: 0.7 },
   generateBtnText: { color: '#0F0F1A', fontWeight: '800', fontSize: 16 },
   loadingRow: { flexDirection: 'row', alignItems: 'center' },
+
+  errorCard: { backgroundColor: '#2A0F14', borderRadius: 14, borderWidth: 1, borderColor: '#FF5C5C', padding: 16, marginBottom: 24, gap: 10 },
+  errorTitle: { color: '#FF8A8A', fontSize: 14, fontWeight: '700', lineHeight: 20 },
+  errorDetail: { color: '#B06A6A', fontSize: 12, lineHeight: 17 },
+  errorRetry: { alignSelf: 'flex-start', backgroundColor: '#3A1A1F', borderRadius: 8, borderWidth: 1, borderColor: '#FF5C5C', paddingHorizontal: 14, paddingVertical: 8 },
+  errorRetryText: { color: '#FF8A8A', fontSize: 13, fontWeight: '700' },
 
   results: { gap: 16 },
   resultsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

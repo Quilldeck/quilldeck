@@ -39,11 +39,15 @@ const [genre, setGenre] = useState('');
   const [loading, setLoading] = useState(false);
   const [showGenres, setShowGenres] = useState(false);
   const [copied, setCopied] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const generateBlurbs = async () => {
     
     setLoading(true);
+    setError(null);
+    setErrorDetail(null);
     setBlurbs([]);
     try {
       const response = await fetch('https://quilldeck-api.vercel.app/api/generate-blurb', {
@@ -74,17 +78,30 @@ Respond in this exact JSON format (no markdown, no backticks):
 {"blurbs":[{"variant":1,"hook":"emotional","text":"Full blurb text here..."},{"variant":2,"hook":"action","text":"Full blurb text here..."},{"variant":3,"hook":"mystery","text":"Full blurb text here..."}]}`,
         }),
       });
-      const data = await response.json();
-      if (data.blurbs) {
-        setBlurbs(data.blurbs);
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }).start();
+      // The API reports failures as JSON, but a crash or gateway error can
+      // still return HTML, so never assume the body parses.
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        setError(data?.error ?? `The server returned an error (${response.status}).`);
+        setErrorDetail(data?.detail ?? null);
+        return;
       }
-    } catch (error) {
-      console.error('Generation failed:', error);
+
+      if (!data?.blurbs?.length) {
+        setError('The response came back without any blurbs.');
+        return;
+      }
+
+      setBlurbs(data.blurbs);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }).start();
+    } catch (err: any) {
+      setError("Couldn't reach the server. Check your connection and try again.");
+      setErrorDetail(err?.message ?? null);
     } finally {
       setLoading(false);
     }
@@ -158,6 +175,21 @@ Respond in this exact JSON format (no markdown, no backticks):
           </TouchableOpacity>
         </View>
 
+        {/* Error */}
+        {error && (
+          <View style={styles.errorCard}>
+            <Text style={styles.errorTitle}>⚠ {error}</Text>
+            {errorDetail ? <Text style={styles.errorDetail}>{errorDetail}</Text> : null}
+            <TouchableOpacity
+              style={styles.errorRetry}
+              onPress={generateBlurbs}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.errorRetryText}>Try again</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Results */}
         {blurbs.length > 0 && (
           <Animated.View style={[styles.results, { opacity: fadeAnim }]}>
@@ -230,6 +262,12 @@ const styles = StyleSheet.create({
   generateBtnDisabled: { opacity: 0.7 },
   generateBtnText: { color: '#0F0F1A', fontWeight: '800', fontSize: 16 },
   loadingRow: { flexDirection: 'row', alignItems: 'center' },
+
+  errorCard: { backgroundColor: '#2A0F14', borderRadius: 14, borderWidth: 1, borderColor: '#FF5C5C', padding: 16, marginBottom: 24, gap: 10 },
+  errorTitle: { color: '#FF8A8A', fontSize: 14, fontWeight: '700', lineHeight: 20 },
+  errorDetail: { color: '#B06A6A', fontSize: 12, lineHeight: 17 },
+  errorRetry: { alignSelf: 'flex-start', backgroundColor: '#3A1A1F', borderRadius: 8, borderWidth: 1, borderColor: '#FF5C5C', paddingHorizontal: 14, paddingVertical: 8 },
+  errorRetryText: { color: '#FF8A8A', fontSize: 13, fontWeight: '700' },
 
   results: { gap: 16 },
   resultsHeader: { fontSize: 18, fontWeight: '800', color: '#F5F5F5', marginBottom: 4 },
