@@ -1,3 +1,13 @@
+import { generateJson } from '../lib/groq';
+
+interface MarketingPayload {
+  socialPosts: unknown[];
+  emails: unknown[];
+  adCopy: unknown[];
+  calendar: unknown[];
+  promoSites: unknown[];
+}
+
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -8,32 +18,23 @@ export default async function handler(req: any, res: any) {
   const { prompt, website } = req.body;
   if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
 
-  const fullPrompt = website 
-    ? `${prompt}\n\nAuthor website: ${website}` 
+  const fullPrompt = website
+    ? `${prompt}\n\nAuthor website: ${website}`
     : prompt;
 
-  try {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        max_tokens: 8000,
-        messages: [{ role: 'user', content: fullPrompt }],
-      }),
-    });
+  const result = await generateJson<MarketingPayload>(fullPrompt, 8000);
 
-    const data = await response.json();
-    const text = data.choices[0].message.content;
-    const start = text.indexOf('{');
-    const end = text.lastIndexOf('}');
-    const parsed = JSON.parse(text.slice(start, end + 1));
-    return res.status(200).json(parsed);
-  } catch (error: any) {
-    console.error('Groq API error:', error);
-    return res.status(500).json({ error: 'Generation failed', details: error.message });
+  if (!result.ok) {
+    console.error('generate-marketing failed:', result.error, '|', result.detail);
+    return res.status(result.status).json({ error: result.error, detail: result.detail });
   }
+
+  // The client renders nothing when socialPosts is absent, so a well-formed
+  // object of the wrong shape would look identical to a silent failure.
+  if (!Array.isArray(result.data.socialPosts) || result.data.socialPosts.length === 0) {
+    console.error('generate-marketing: parsed JSON has no socialPosts array');
+    return res.status(502).json({ error: 'Model returned JSON without a socialPosts array' });
+  }
+
+  return res.status(200).json(result.data);
 }
