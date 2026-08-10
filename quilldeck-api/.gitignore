@@ -1,0 +1,5 @@
+.vercel
+.env*.local
+
+# Local scratch file holding the Groq key - never commit
+Groq api.txt
