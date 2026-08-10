@@ -14,14 +14,8 @@ import {
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 
-const GENRES = [
-  'Afroeurofantasy', 'Fantasy', 'Science Fiction', 'Romance',
-  'Mystery / Thriller', 'Horror', 'Literary Fiction', 'Historical Fiction',
-  'Urban Fantasy', 'Paranormal Romance', 'Cozy Mystery', 'Dark Fantasy',
-  'Epic Fantasy', 'Space Opera', 'Dystopian', 'Contemporary Romance',
-  'LitRPG / GameLit', 'Steampunk', 'Grimdark', 'Young Adult',
-  'Middle Grade', 'Non-Fiction', 'Memoir', 'Self-Help',
-];
+import GenrePicker from '../components/GenrePicker';
+import { GenreCategory } from '../constants/genres';
 
 interface Blurb {
   variant: number;
@@ -38,7 +32,8 @@ const HOOK_CONFIG: Record<string, { label: string; color: string; bg: string; ic
 export default function BlurbGeneratorScreen() {
   const router = useRouter();
   const [title, setTitle] = useState('');
-  const [genre, setGenre] = useState('');
+  const [genreCategory, setGenreCategory] = useState<GenreCategory | ''>('');
+const [genre, setGenre] = useState('');
   const [synopsis, setSynopsis] = useState('');
   const [blurbs, setBlurbs] = useState<Blurb[]>([]);
   const [loading, setLoading] = useState(false);
@@ -130,13 +125,10 @@ Respond in this exact JSON format (no markdown, no backticks):
             onChangeText={setTitle}
           />
 
-         <Text style={styles.inputLabel}>Genre</Text>
-<TextInput
-  style={styles.input}
-  placeholder="e.g. Afroeurofantasy"
-  placeholderTextColor="#555577"
-  value={genre}
-  onChangeText={setGenre}
+         <GenrePicker
+  category={genreCategory}
+  genre={genre}
+  onChange={(cat, g) => { setGenreCategory(cat); setGenre(g); }}
 />
           <Text style={styles.inputLabel}>Synopsis</Text>
           <TextInput

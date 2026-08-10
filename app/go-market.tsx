@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
+import GenrePicker from '../components/GenrePicker';
+import { GenreCategory } from '../constants/genres';
 
 const API_URL = 'https://quilldeck-api.vercel.app/api/generate-marketing';
 
@@ -53,7 +55,8 @@ const EMAIL_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
 export default function GoMarketScreen() {
   const router = useRouter();
   const [title, setTitle] = useState('');
-  const [genre, setGenre] = useState('');
+  const [genreCategory, setGenreCategory] = useState<GenreCategory | ''>('');
+const [genre, setGenre] = useState('');
   const [blurb, setBlurb] = useState('');
   const [launchDate, setLaunchDate] = useState('');
   const [loading, setLoading] = useState(false);
@@ -161,14 +164,11 @@ Respond in valid JSON only (no markdown):
               onChangeText={setTitle}
             />
 
-            <Text style={styles.inputLabel}>Genre</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. Afroeurofantasy"
-              placeholderTextColor="#555577"
-              value={genre}
-              onChangeText={setGenre}
-            />
+           <GenrePicker
+  category={genreCategory}
+  genre={genre}
+  onChange={(cat, g) => { setGenreCategory(cat); setGenre(g); }}
+/>
 
             <Text style={styles.inputLabel}>Blurb <Text style={styles.optional}>(recommended)</Text></Text>
             <TextInput
