@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 
+import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 
 const GENRES = [
@@ -94,8 +95,8 @@ Respond in this exact JSON format (no markdown, no backticks):
     }
   };
 
-  const copyBlurb = (text: string, variant: number) => {
-   // clipboard copy
+  const copyBlurb = async (text: string, variant: number) => {
+    await Clipboard.setStringAsync(text);
     setCopied(variant);
     setTimeout(() => setCopied(null), 2000);
   };

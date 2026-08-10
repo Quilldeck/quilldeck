@@ -9,7 +9,7 @@ import {
   FREE_BLURB_LIMIT,
   FREE_MARKETING_LIMIT,
   type SubscriptionState,
-} from '../services/subscriptionService';
+} from '../subscriptionService';
 
 export function useSubscription() {
   const [subscription, setSubscription] = useState<SubscriptionState>({
