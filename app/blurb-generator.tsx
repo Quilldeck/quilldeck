@@ -44,7 +44,11 @@ const [genre, setGenre] = useState('');
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const generateBlurbs = async () => {
-    
+    if (!title.trim() || !genre.trim()) {
+      setError('Add a book title and pick a genre first.');
+      setErrorDetail(null);
+      return;
+    }
     setLoading(true);
     setError(null);
     setErrorDetail(null);
