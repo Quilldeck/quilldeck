@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "kit-expo-minimal",
-    "slug": "kit-expo-minimal",
+    "name": "Quilldeck",
+    "slug": "quilldeck",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "expokit",
-    "userInterfaceStyle": "light",
+    "scheme": "quilldeck",
+    "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true
     },
