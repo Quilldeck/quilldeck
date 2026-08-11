@@ -99,9 +99,6 @@ export default function HomeScreen() {
                 3 professional blurbs from your synopsis — emotional, action,
                 and mystery hooks. Ready to paste into KDP.
               </Text>
-              <View style={styles.cardTag}>
-                <Text style={styles.cardTagText}>FREE</Text>
-              </View>
             </View>
             <Text style={styles.cardArrow}>›</Text>
           </TouchableOpacity>
@@ -123,11 +120,6 @@ export default function HomeScreen() {
                 One tap generates your complete book launch plan — social posts,
                 emails, ad copy, and a 14-day calendar.
               </Text>
-              <View style={[styles.cardTag, styles.cardTagHero]}>
-                <Text style={[styles.cardTagText, styles.cardTagTextHero]}>
-                  PRO FEATURE
-                </Text>
-              </View>
             </View>
             <Text style={[styles.cardArrow, styles.cardArrowHero]}>›</Text>
           </TouchableOpacity>
@@ -288,28 +280,6 @@ const styles = StyleSheet.create({
   },
   cardDescHero: {
     color: '#BBA060',
-  },
-  cardTag: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#2A2A44',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    marginTop: 2,
-  },
-  cardTagHero: {
-    backgroundColor: '#2A1A00',
-    borderWidth: 1,
-    borderColor: '#E8A838',
-  },
-  cardTagText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#8888AA',
-    letterSpacing: 0.5,
-  },
-  cardTagTextHero: {
-    color: '#E8A838',
   },
   cardArrow: {
     fontSize: 24,
