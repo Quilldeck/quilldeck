@@ -143,12 +143,6 @@ export default function HomeScreen() {
           </View>
         </Animated.View>
 
-        {/* Solana Strip */}
-        <Animated.View style={[styles.solanaStrip, { opacity: cardAnim }]}>
-          <Text style={styles.solanaText}>
-            ◎ Pay with USDC · Zero platform fees · Seeker-native
-          </Text>
-        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -321,22 +315,5 @@ const styles = StyleSheet.create({
     width: 1,
     height: 32,
     backgroundColor: '#2A2A44',
-  },
-
-  // Solana Strip
-  solanaStrip: {
-    backgroundColor: '#0D0D1F',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#1A1A3A',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  solanaText: {
-    fontSize: 12,
-    color: '#9945FF',
-    fontWeight: '500',
-    letterSpacing: 0.3,
   },
 });
