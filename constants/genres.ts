@@ -5,8 +5,6 @@ export const GENRE_CATEGORIES = [
   'Fiction',
   'Non-Fiction',
   'Poetry',
-  'Afroeurofantasy',
-  'Afrofuturism',
 ] as const;
 
 export type GenreCategory = typeof GENRE_CATEGORIES[number];
@@ -23,7 +21,7 @@ export const SUBGENRES: Record<GenreCategory, readonly string[]> = {
     'Horror', 'Supernatural Horror', 'Grimdark', 'Literary Fiction', 'Historical Fiction',
     "Women's Fiction", 'Adventure', 'War Fiction', 'Western', 'Satire', 'Steampunk',
     'LitRPG / GameLit', 'Young Adult', 'New Adult', 'Middle Grade', "Children's Fiction",
-    'Short Story Collection', 'Anthology', 'Erotica',
+    'Short Story Collection', 'Anthology', 'Erotica', 'Afroeurofantasy', 'Afrofuturism',
   ],
   'Non-Fiction': [
     'Memoir', 'Biography / Autobiography', 'Self-Help', 'Personal Development',
@@ -38,8 +36,6 @@ export const SUBGENRES: Record<GenreCategory, readonly string[]> = {
     'Narrative Poetry', 'Free Verse', 'Spoken Word', 'Sonnet Collection',
     'Contemporary Poetry', 'Devotional Poetry',
   ],
-  Afroeurofantasy: ['Afroeurofantasy Fiction'],
-  Afrofuturism: ['Afrofuturism'],
 };
 
 export const ALL_GENRES: string[] = Object.values(SUBGENRES).flat();
