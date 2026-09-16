@@ -94,7 +94,7 @@ Use the ACTUAL book title, genre, and any character/world details from the blurb
 Generate ALL of the following:
 
 1. SOCIAL MEDIA POSTS (5 posts) — platform-specific, each referencing the actual book:
-   - BookTok script (60-second hook)
+   - BookTok script (60-second hook) — describe the video content in plain sentences (what to show, what to say); do NOT use square brackets or stage-direction notation like "[Camera on...]"
    - Bookstagram caption (20 hashtags)
    - X/Twitter post
    - Facebook post
