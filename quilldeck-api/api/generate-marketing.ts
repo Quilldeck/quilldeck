@@ -1,4 +1,4 @@
-import { generateJson } from '../lib/groq';
+﻿import { generateJson } from '../lib/groq';
 
 interface MarketingPayload {
   socialPosts: unknown[];
@@ -22,15 +22,21 @@ export default async function handler(req: any, res: any) {
     ? `${prompt}\n\nAuthor website: ${website}`
     : prompt;
 
-  const result = await generateJson<MarketingPayload>(fullPrompt, 8000);
+  let result = await generateJson<MarketingPayload>(fullPrompt, 8000);
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (result.ok && Array.isArray(result.data.socialPosts) && result.data.socialPosts.length > 0) {
+      break;
+    }
+    console.error(`generate-marketing retry ${attempt + 1}:`, result.ok ? 'empty socialPosts array' : result.error);
+    result = await generateJson<MarketingPayload>(fullPrompt, 8000);
+  }
 
   if (!result.ok) {
     console.error('generate-marketing failed:', result.error, '|', result.detail);
     return res.status(result.status).json({ error: result.error, detail: result.detail });
   }
 
-  // The client renders nothing when socialPosts is absent, so a well-formed
-  // object of the wrong shape would look identical to a silent failure.
   if (!Array.isArray(result.data.socialPosts) || result.data.socialPosts.length === 0) {
     console.error('generate-marketing: parsed JSON has no socialPosts array');
     return res.status(502).json({ error: 'Model returned JSON without a socialPosts array' });
