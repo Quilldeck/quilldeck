@@ -1,6 +1,7 @@
 ﻿import { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -9,6 +10,9 @@ import {
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+
+import { payWithSolana } from '../solanaPayment';
+import { unlockPro } from '../subscriptionService';
 
 const TIERS = [
   {
@@ -91,14 +95,31 @@ export default function SubscriptionScreen() {
   const [paying, setPaying] = useState(false);
   const [paid, setPaid] = useState(false);
   const [useCrypto, setUseCrypto] = useState(true);
+  const [txSignature, setTxSignature] = useState<string | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const selected = TIERS.find(t => t.id === selectedTier)!;
 
   const handlePayment = async () => {
+    if (!useCrypto) {
+      Alert.alert('Coming soon', 'Card payment isn\'t available yet — pay with Solana for now.');
+      return;
+    }
+
     setPaying(true);
-    await new Promise(resolve => setTimeout(resolve, 2500));
-    setPaying(false);
-    setPaid(true);
+    setPaymentError(null);
+
+    try {
+      const result = await payWithSolana(selected.priceUSDC);
+      await unlockPro(result.walletAddress, result.txSignature);
+      setTxSignature(result.txSignature);
+      setPaid(true);
+    } catch (err: any) {
+      console.error('Payment failed:', err);
+      setPaymentError(err?.message ?? 'Payment failed. Please try again.');
+    } finally {
+      setPaying(false);
+    }
   };
 
   if (paid) {
@@ -113,8 +134,10 @@ export default function SubscriptionScreen() {
           </Text>
           <View style={styles.txCard}>
             <Text style={styles.txLabel}>Transaction confirmed</Text>
-            <Text style={styles.txHash}>DemoTx_{Date.now().toString().slice(-8)}...✓</Text>
-            <Text style={styles.txNetwork}>Solana · USDC · &lt;1 second</Text>
+            <Text style={styles.txHash}>
+              {txSignature ? `${txSignature.slice(0, 8)}...${txSignature.slice(-8)}` : ''}
+            </Text>
+            <Text style={styles.txNetwork}>Solana Devnet · USDC</Text>
           </View>
           <TouchableOpacity style={styles.successBtn} onPress={() => router.back()}>
             <Text style={styles.successBtnText}>Start Publishing →</Text>
@@ -169,7 +192,7 @@ export default function SubscriptionScreen() {
         {useCrypto && (
           <View style={styles.cryptoInfo}>
             <Text style={styles.cryptoInfoText}>
-              ◎ Zero platform commission · Confirmed in &lt;1 second · Seed Vault secured
+              ◎ Zero platform commission · Devnet USDC · Seed Vault secured
             </Text>
           </View>
         )}
@@ -222,6 +245,13 @@ export default function SubscriptionScreen() {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* Error */}
+        {paymentError && (
+          <View style={styles.errorCard}>
+            <Text style={styles.errorTitle}>⚠ {paymentError}</Text>
+          </View>
+        )}
 
         {/* Payment Button */}
         <View style={styles.paymentSection}>
@@ -304,6 +334,9 @@ const styles = StyleSheet.create({
   featureRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
   featureCheck: { fontSize: 13, fontWeight: '700', marginTop: 1 },
   featureText: { fontSize: 13, color: '#8888AA', flex: 1, lineHeight: 18 },
+
+  errorCard: { backgroundColor: '#2A0F14', borderRadius: 14, borderWidth: 1, borderColor: '#FF5C5C', padding: 16, marginBottom: 16 },
+  errorTitle: { color: '#FF8A8A', fontSize: 13, fontWeight: '600', lineHeight: 19 },
 
   paymentSection: { gap: 12 },
   paymentSummary: { backgroundColor: '#1E1E32', borderRadius: 12, borderWidth: 1, borderColor: '#2A2A44', padding: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

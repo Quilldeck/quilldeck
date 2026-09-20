@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+﻿import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import {
   Animated,
@@ -123,6 +123,27 @@ export default function HomeScreen() {
             </View>
             <Text style={[styles.cardArrow, styles.cardArrowHero]}>›</Text>
           </TouchableOpacity>
+
+          {/* Subscription Card */}
+          <TouchableOpacity
+            style={[styles.featureCard, styles.featureCardPro]}
+            onPress={() => router.push('/subscription')}
+            activeOpacity={0.85}
+          >
+            <View style={[styles.cardIconWrap, styles.cardIconWrapPro]}>
+              <Text style={styles.cardIcon}>◎</Text>
+            </View>
+            <View style={styles.cardBody}>
+              <Text style={[styles.cardTitle, styles.cardTitlePro]}>
+                Upgrade to Pro
+              </Text>
+              <Text style={[styles.cardDesc, styles.cardDescPro]}>
+                Unlock unlimited blurbs and marketing packages. Pay with
+                Solana — zero platform commission.
+              </Text>
+            </View>
+            <Text style={[styles.cardArrow, styles.cardArrowPro]}>›</Text>
+          </TouchableOpacity>
         </Animated.View>
 
         {/* Stats Strip */}
@@ -240,6 +261,11 @@ const styles = StyleSheet.create({
     borderColor: '#E8A838',
     borderWidth: 1.5,
   },
+  featureCardPro: {
+    backgroundColor: '#1A0A2A',
+    borderColor: '#9945FF',
+    borderWidth: 1.5,
+  },
   cardIconWrap: {
     width: 48,
     height: 48,
@@ -250,6 +276,9 @@ const styles = StyleSheet.create({
   },
   cardIconWrapHero: {
     backgroundColor: '#2A1A00',
+  },
+  cardIconWrapPro: {
+    backgroundColor: '#2A1A44',
   },
   cardIcon: {
     fontSize: 22,
@@ -267,6 +296,10 @@ const styles = StyleSheet.create({
     color: '#E8A838',
     fontSize: 17,
   },
+  cardTitlePro: {
+    color: '#9945FF',
+    fontSize: 17,
+  },
   cardDesc: {
     fontSize: 13,
     color: '#8888AA',
@@ -275,6 +308,9 @@ const styles = StyleSheet.create({
   cardDescHero: {
     color: '#BBA060',
   },
+  cardDescPro: {
+    color: '#B0A0D0',
+  },
   cardArrow: {
     fontSize: 24,
     color: '#2A2A44',
@@ -282,6 +318,9 @@ const styles = StyleSheet.create({
   },
   cardArrowHero: {
     color: '#E8A838',
+  },
+  cardArrowPro: {
+    color: '#9945FF',
   },
 
   // Stats
