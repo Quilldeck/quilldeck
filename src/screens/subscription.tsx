@@ -154,7 +154,7 @@ export default function SubscriptionScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
+<View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
             <Text style={styles.backArrow}>←</Text>
           </TouchableOpacity>
@@ -359,3 +359,5 @@ const styles = StyleSheet.create({
   successBtn: { backgroundColor: '#E8A838', borderRadius: 14, padding: 18, width: '100%', alignItems: 'center' },
   successBtnText: { color: '#0F0F1A', fontWeight: '800', fontSize: 16 },
 });
+
+

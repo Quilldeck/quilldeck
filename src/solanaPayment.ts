@@ -45,24 +45,28 @@ function isMwaTimeout(error: any): boolean {
 /**
  * Opens an MWA session, prompts the user to authorize and pay `amountUSDC`
  * in devnet USDC to the Taoscope receiving wallet, and returns the payer's
- * address and the confirmed transaction signature.
+ * address and the transaction signature as soon as the wallet has signed
+ * and submitted it.
  *
- * MWA sessions with the wallet app (Phantom, Solflare, etc.) occasionally
- * time out waiting for a response -- a known, transient class of flakiness
- * in Solana Mobile wallet communication, not specific to this transaction's
- * content. Retries the whole session up to twice on that specific failure;
- * any other error (rejection, insufficient balance, etc.) surfaces
- * immediately without retrying.
+ * Deliberately does NOT wait for on-chain confirmation before returning.
+ * The Android activity hosting this app can be backgrounded (and
+ * occasionally killed/recreated) while switched to the wallet app, and a
+ * multi-second confirmation poll here was exactly the kind of long-running
+ * async work that risked getting cut off mid-flight -- silently losing the
+ * Pro-unlock call even though the wallet had already submitted a valid
+ * transaction. A signed transaction with a valid recent blockhash is
+ * overwhelmingly likely to land; confirmation certainty isn't worth that
+ * risk for this flow.
  */
 export async function payWithSolana(amountUSDC: number): Promise<PaymentResult> {
   const connection = new Connection(DEVNET_RPC_URL, 'confirmed');
   const usdcMint = new PublicKey(USDC_MINT_DEVNET);
   const destinationOwner = new PublicKey(TAOSCOPE_WALLET);
 
-  // Fetch the blockhash BEFORE opening the wallet session -- getting one
-  // needs no wallet approval, so there's no reason to delay it until after
-  // wallet.authorize() switches focus away to the wallet app and back.
-  const { blockhash } = await connection.getLatestBlockhash();
+  const {
+    context: { slot: minContextSlot },
+    value: { blockhash },
+  } = await connection.getLatestBlockhashAndContext();
 
   const runSession = () =>
     transact(async (wallet: Web3MobileWallet) => {
@@ -81,7 +85,6 @@ export async function payWithSolana(amountUSDC: number): Promise<PaymentResult> 
       const amountInSmallestUnit = Math.round(amountUSDC * 10 ** USDC_DECIMALS);
 
       const transaction = new Transaction().add(
-        // No-op if the destination already has a USDC account; creates one if not.
         createAssociatedTokenAccountIdempotentInstruction(
           payerPublicKey,
           destinationAta,
@@ -101,12 +104,14 @@ export async function payWithSolana(amountUSDC: number): Promise<PaymentResult> 
 
       const signatures = await wallet.signAndSendTransactions({
         transactions: [transaction],
+        minContextSlot,
       });
 
       const txSignature = signatures[0];
 
-      await connection.confirmTransaction(txSignature, 'confirmed');
-
+      // No confirmTransaction() wait here -- return immediately so the
+      // caller can persist the unlock before anything else has a chance
+      // to interrupt the flow.
       return {
         walletAddress: payerPublicKey.toBase58(),
         txSignature,
