@@ -1,4 +1,4 @@
-// Shared Groq client for the Quilldeck endpoints.
+﻿// Shared Groq client for the Quilldeck endpoints.
 //
 // Both endpoints ask the model for JSON and then parse it, and that parse is
 // the most fragile step in the API. The model periodically answers with prose
@@ -77,6 +77,10 @@ export async function generateJson<T>(prompt: string, maxTokens: number): Promis
       body: JSON.stringify({
         model: MODEL,
         max_tokens: maxTokens,
+        // Without an explicit temperature, Groq's default produced noticeably
+        // similar output across separate generations for the same input --
+        // a real problem for a tool whose whole pitch is fresh creative copy.
+        temperature: 1.1,
         // Constrain the model to emit a JSON object, which stops the
         // conversational replies the parse guard below otherwise has to catch.
         // Groq requires the prompt itself to mention JSON; both callers build
@@ -111,3 +115,4 @@ export async function generateJson<T>(prompt: string, maxTokens: number): Promis
     return fail(502, 'Could not reach Groq', error?.message ?? String(error));
   }
 }
+
