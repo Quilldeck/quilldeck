@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
@@ -14,6 +14,7 @@ import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import GenrePicker from '../components/GenrePicker';
 import { GenreCategory } from '../constants/genres';
+import { useSubscription } from '../src/hooks/useSubscription';
 
 const API_URL = 'https://quilldeck-api.vercel.app/api/generate-marketing';
 
@@ -54,9 +55,10 @@ const EMAIL_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
 
 export default function GoMarketScreen() {
   const router = useRouter();
+  const { isPro, checkAndUseMarketing, marketingRemaining } = useSubscription();
   const [title, setTitle] = useState('');
   const [genreCategory, setGenreCategory] = useState<GenreCategory | ''>('');
-const [genre, setGenre] = useState('');
+  const [genre, setGenre] = useState('');
   const [blurb, setBlurb] = useState('');
   const [launchDate, setLaunchDate] = useState('');
   const [loading, setLoading] = useState(false);
@@ -72,6 +74,15 @@ const [genre, setGenre] = useState('');
       setErrorDetail(null);
       return;
     }
+
+    if (!isPro) {
+      const allowed = await checkAndUseMarketing();
+      if (!allowed) {
+        router.push('/subscription');
+        return;
+      }
+    }
+
     setLoading(true);
     setError(null);
     setErrorDetail(null);
@@ -102,7 +113,7 @@ Generate ALL of the following:
 
 2. EMAIL NEWSLETTERS (3 emails) with subject lines:
    - Pre-launch tease
-   - Launch day announcement  
+   - Launch day announcement
    - Post-launch follow-up
 
 3. AMAZON AD COPY (3 variants):
@@ -172,6 +183,14 @@ Respond in valid JSON only (no markdown):
             <Text style={styles.subtitle}>One tap. Complete book launch plan.</Text>
           </View>
         </View>
+
+        {!isPro && (
+          <View style={styles.freeBanner}>
+            <Text style={styles.freeBannerText}>
+              Free trial · {marketingRemaining} package{marketingRemaining === 1 ? '' : 's'} left · Day 1 of 14 shown per generation
+            </Text>
+          </View>
+        )}
 
         {/* Input Card */}
         {!pkg && (
@@ -368,7 +387,7 @@ Respond in valid JSON only (no markdown):
             {/* Calendar Tab */}
             {activeTab === 'Calendar' && (
               <View style={styles.tabContent}>
-                {pkg.calendar.map((day, i) => {
+                {(isPro ? pkg.calendar : pkg.calendar.slice(0, 1)).map((day, i) => {
                   const color = PLATFORM_COLORS[day.platform?.toLowerCase()] || '#E8A838';
                   const key = `cal-${i}`;
                   return (
@@ -391,6 +410,21 @@ Respond in valid JSON only (no markdown):
                     </View>
                   );
                 })}
+
+                {!isPro && pkg.calendar.length > 1 && (
+                  <View style={styles.lockedCard}>
+                    <Text style={styles.lockedIcon}>🔒</Text>
+                    <Text style={styles.lockedTitle}>{pkg.calendar.length - 1} MORE DAYS</Text>
+                    <Text style={styles.lockedSub}>Unlock the full 14-day calendar with Pro</Text>
+                    <TouchableOpacity
+                      style={styles.unlockBtn}
+                      onPress={() => router.push('/subscription')}
+                      activeOpacity={0.85}
+                    >
+                      <Text style={styles.unlockBtnText}>Unlock with Pro →</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             )}
 
@@ -431,6 +465,9 @@ const styles = StyleSheet.create({
   headerText: { flex: 1 },
   title: { fontSize: 22, fontWeight: '800', color: '#E8A838' },
   subtitle: { fontSize: 13, color: '#8888AA', marginTop: 2 },
+
+  freeBanner: { backgroundColor: '#0D0D1F', borderRadius: 10, borderWidth: 1, borderColor: '#1A1A3A', padding: 12, marginBottom: 20, alignItems: 'center' },
+  freeBannerText: { fontSize: 12, color: '#9945FF', fontWeight: '500' },
 
   inputCard: { backgroundColor: '#1E1E32', borderRadius: 16, borderWidth: 1, borderColor: '#2A2A44', padding: 18, gap: 10 },
   inputLabel: { fontSize: 12, fontWeight: '700', color: '#8888AA', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: -4 },
@@ -488,6 +525,13 @@ const styles = StyleSheet.create({
   calendarBody: { flex: 1, gap: 4 },
   calendarPlatform: { fontSize: 12, fontWeight: '700' },
   calendarContent: { fontSize: 13, color: '#F5F5F5', lineHeight: 18 },
+
+  lockedCard: { borderRadius: 16, borderWidth: 1.5, borderColor: '#2A2A44', borderStyle: 'dashed', backgroundColor: '#15152A', padding: 24, alignItems: 'center', gap: 8 },
+  lockedIcon: { fontSize: 28 },
+  lockedTitle: { fontSize: 14, fontWeight: '800', color: '#8888AA', letterSpacing: 0.5 },
+  lockedSub: { fontSize: 13, color: '#555577', marginBottom: 6 },
+  unlockBtn: { backgroundColor: '#9945FF', borderRadius: 10, paddingHorizontal: 18, paddingVertical: 10 },
+  unlockBtnText: { color: '#F5F5F5', fontWeight: '800', fontSize: 13 },
 
   siteName: { fontSize: 15, fontWeight: '800', color: '#E8A838' },
   visitLink: { fontSize: 13, color: '#9945FF', fontWeight: '600' },

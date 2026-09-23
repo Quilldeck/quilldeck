@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+﻿import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 
 import GenrePicker from '../components/GenrePicker';
 import { GenreCategory } from '../constants/genres';
+import { useSubscription } from '../src/hooks/useSubscription';
 
 interface Blurb {
   variant: number;
@@ -31,9 +32,10 @@ const HOOK_CONFIG: Record<string, { label: string; color: string; bg: string; ic
 
 export default function BlurbGeneratorScreen() {
   const router = useRouter();
+  const { isPro, checkAndUseBlurb, blurbsRemaining } = useSubscription();
   const [title, setTitle] = useState('');
   const [genreCategory, setGenreCategory] = useState<GenreCategory | ''>('');
-const [genre, setGenre] = useState('');
+  const [genre, setGenre] = useState('');
   const [synopsis, setSynopsis] = useState('');
   const [blurbs, setBlurbs] = useState<Blurb[]>([]);
   const [loading, setLoading] = useState(false);
@@ -49,6 +51,15 @@ const [genre, setGenre] = useState('');
       setErrorDetail(null);
       return;
     }
+
+    if (!isPro) {
+      const allowed = await checkAndUseBlurb();
+      if (!allowed) {
+        router.push('/subscription');
+        return;
+      }
+    }
+
     setLoading(true);
     setError(null);
     setErrorDetail(null);
@@ -135,6 +146,14 @@ Respond in this exact JSON format (no markdown, no backticks):
           </View>
         </View>
 
+        {!isPro && (
+          <View style={styles.freeBanner}>
+            <Text style={styles.freeBannerText}>
+              Free trial · {blurbsRemaining} generation{blurbsRemaining === 1 ? '' : 's'} left · 1 of 3 variants shown per generation
+            </Text>
+          </View>
+        )}
+
         {/* Input Card */}
         <View style={styles.inputCard}>
           <Text style={styles.inputLabel}>Book Title</Text>
@@ -198,8 +217,27 @@ Respond in this exact JSON format (no markdown, no backticks):
         {blurbs.length > 0 && (
           <Animated.View style={[styles.results, { opacity: fadeAnim }]}>
             <Text style={styles.resultsHeader}>Your 3 Blurbs</Text>
-            {blurbs.map((blurb) => {
+            {blurbs.map((blurb, idx) => {
               const config = HOOK_CONFIG[blurb.hook] || HOOK_CONFIG.emotional;
+              const locked = !isPro && idx > 0;
+
+              if (locked) {
+                return (
+                  <View key={blurb.variant} style={styles.lockedCard}>
+                    <Text style={styles.lockedIcon}>🔒</Text>
+                    <Text style={styles.lockedTitle}>{config.label}</Text>
+                    <Text style={styles.lockedSub}>Unlock all 3 variants with Pro</Text>
+                    <TouchableOpacity
+                      style={styles.unlockBtn}
+                      onPress={() => router.push('/subscription')}
+                      activeOpacity={0.85}
+                    >
+                      <Text style={styles.unlockBtnText}>Unlock with Pro →</Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              }
+
               return (
                 <View key={blurb.variant} style={[styles.blurbCard, { backgroundColor: config.bg, borderColor: config.color }]}>
                   <View style={styles.blurbCardHeader}>
@@ -246,6 +284,9 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '800', color: '#F5F5F5' },
   subtitle: { fontSize: 13, color: '#8888AA', marginTop: 2 },
 
+  freeBanner: { backgroundColor: '#0D0D1F', borderRadius: 10, borderWidth: 1, borderColor: '#1A1A3A', padding: 12, marginBottom: 20, alignItems: 'center' },
+  freeBannerText: { fontSize: 12, color: '#9945FF', fontWeight: '500' },
+
   inputCard: { backgroundColor: '#1E1E32', borderRadius: 16, borderWidth: 1, borderColor: '#2A2A44', padding: 18, marginBottom: 24, gap: 10 },
   inputLabel: { fontSize: 12, fontWeight: '700', color: '#8888AA', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: -4 },
   input: { backgroundColor: '#0F0F1A', borderRadius: 10, borderWidth: 1, borderColor: '#2A2A44', padding: 14, color: '#F5F5F5', fontSize: 15 },
@@ -286,6 +327,13 @@ const styles = StyleSheet.create({
   copyBtn: { backgroundColor: '#2A2A44', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
   copyBtnSuccess: { backgroundColor: '#1A3A1A' },
   copyBtnText: { color: '#F5F5F5', fontSize: 13, fontWeight: '600' },
+
+  lockedCard: { borderRadius: 16, borderWidth: 1.5, borderColor: '#2A2A44', borderStyle: 'dashed', backgroundColor: '#15152A', padding: 24, alignItems: 'center', gap: 8 },
+  lockedIcon: { fontSize: 28 },
+  lockedTitle: { fontSize: 14, fontWeight: '800', color: '#8888AA', letterSpacing: 0.5 },
+  lockedSub: { fontSize: 13, color: '#555577', marginBottom: 6 },
+  unlockBtn: { backgroundColor: '#9945FF', borderRadius: 10, paddingHorizontal: 18, paddingVertical: 10 },
+  unlockBtnText: { color: '#F5F5F5', fontWeight: '800', fontSize: 13 },
 
   regenerateBtn: { backgroundColor: '#1E1E32', borderRadius: 12, borderWidth: 1, borderColor: '#2A2A44', padding: 14, alignItems: 'center' },
   regenerateBtnText: { color: '#8888AA', fontWeight: '600', fontSize: 15 },
