@@ -15,7 +15,8 @@ import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 
 import GenrePicker from '../components/GenrePicker';
-import { GenreCategory } from '../constants/genres';
+import { GenreCategory, OTHER_GENRE_SENTINEL } from '../constants/genres';
+import { AFROEUROFANTASY_GENRE, buildAfroeurofantasyPrimer } from '../constants/afroeurofantasy';
 import { useSubscription } from '../src/hooks/useSubscription';
 
 interface Blurb {
@@ -36,6 +37,9 @@ export default function BlurbGeneratorScreen() {
   const [title, setTitle] = useState('');
   const [genreCategory, setGenreCategory] = useState<GenreCategory | ''>('');
   const [genre, setGenre] = useState('');
+  const [customGenre, setCustomGenre] = useState('');
+  const [africanTradition, setAfricanTradition] = useState('');
+  const [europeanTradition, setEuropeanTradition] = useState('');
   const [synopsis, setSynopsis] = useState('');
   const [blurbs, setBlurbs] = useState<Blurb[]>([]);
   const [loading, setLoading] = useState(false);
@@ -45,9 +49,19 @@ export default function BlurbGeneratorScreen() {
   const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
+  // The genre actually sent to the model -- swaps in the free-text value
+  // when the author picked "Other" rather than sending the sentinel itself.
+  const effectiveGenre = genre === OTHER_GENRE_SENTINEL ? customGenre.trim() : genre;
+
   const generateBlurbs = async () => {
     if (!title.trim() || !genre.trim()) {
       setError('Add a book title and pick a genre first.');
+      setErrorDetail(null);
+      return;
+    }
+
+    if (genre === OTHER_GENRE_SENTINEL && !customGenre.trim()) {
+      setError('Type in your genre, or pick one from the list instead.');
       setErrorDetail(null);
       return;
     }
@@ -65,11 +79,20 @@ export default function BlurbGeneratorScreen() {
     setErrorDetail(null);
     setBlurbs([]);
     try {
+      // Afroeurofantasy is a coined subgenre the model has never seen in
+      // training, so it needs an explicit primer grounding it in the real
+      // definitional rules -- otherwise it defaults to generic "African
+      // magic meets European magic" copy. See constants/afroeurofantasy.ts.
+      const afroPrimer =
+        genre === AFROEUROFANTASY_GENRE
+          ? buildAfroeurofantasyPrimer(africanTradition, europeanTradition) + '\n\n'
+          : '';
+
       const response = await fetch('https://quilldeck-api.vercel.app/api/generate-blurb', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: `You are a professional book marketing copywriter specialising in ${genre} fiction.
+          prompt: `${afroPrimer}You are a professional book marketing copywriter specialising in ${effectiveGenre} fiction.
 
 Generate exactly 3 different book blurbs for an indie author's novel. Each blurb should use a different hook strategy:
 1. EMOTIONAL HOOK — Lead with the character's emotional stakes
@@ -78,7 +101,7 @@ Generate exactly 3 different book blurbs for an indie author's novel. Each blurb
 
 Book details:
 - Title: "${title}"
-- Genre: ${genre}
+- Genre: ${effectiveGenre}
 - Synopsis: ${synopsis}
 
 Requirements for EACH blurb:
@@ -165,11 +188,17 @@ Respond in this exact JSON format (no markdown, no backticks):
             onChangeText={setTitle}
           />
 
-         <GenrePicker
-  category={genreCategory}
-  genre={genre}
-  onChange={(cat, g) => { setGenreCategory(cat); setGenre(g); }}
-/>
+          <GenrePicker
+            category={genreCategory}
+            genre={genre}
+            onChange={(cat, g) => { setGenreCategory(cat); setGenre(g); }}
+            customGenre={customGenre}
+            onCustomGenreChange={setCustomGenre}
+            africanTradition={africanTradition}
+            onAfricanTraditionChange={setAfricanTradition}
+            europeanTradition={europeanTradition}
+            onEuropeanTraditionChange={setEuropeanTradition}
+          />
           <Text style={styles.inputLabel}>Synopsis</Text>
           <TextInput
             style={[styles.input, styles.inputMulti]}

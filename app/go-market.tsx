@@ -13,7 +13,8 @@ import {
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import GenrePicker from '../components/GenrePicker';
-import { GenreCategory } from '../constants/genres';
+import { GenreCategory, OTHER_GENRE_SENTINEL } from '../constants/genres';
+import { AFROEUROFANTASY_GENRE, buildAfroeurofantasyPrimer } from '../constants/afroeurofantasy';
 import { useSubscription } from '../src/hooks/useSubscription';
 
 const API_URL = 'https://quilldeck-api.vercel.app/api/generate-marketing';
@@ -59,6 +60,9 @@ export default function GoMarketScreen() {
   const [title, setTitle] = useState('');
   const [genreCategory, setGenreCategory] = useState<GenreCategory | ''>('');
   const [genre, setGenre] = useState('');
+  const [customGenre, setCustomGenre] = useState('');
+  const [africanTradition, setAfricanTradition] = useState('');
+  const [europeanTradition, setEuropeanTradition] = useState('');
   const [blurb, setBlurb] = useState('');
   const [launchDate, setLaunchDate] = useState('');
   const [loading, setLoading] = useState(false);
@@ -68,9 +72,19 @@ export default function GoMarketScreen() {
   const [error, setError] = useState<string | null>(null);
   const [errorDetail, setErrorDetail] = useState<string | null>(null);
 
+  // The genre actually sent to the model -- swaps in the free-text value
+  // when the author picked "Other" rather than sending the sentinel itself.
+  const effectiveGenre = genre === OTHER_GENRE_SENTINEL ? customGenre.trim() : genre;
+
   const generate = async () => {
     if (!title.trim() || !genre.trim()) {
       setError('Add a book title and pick a genre first.');
+      setErrorDetail(null);
+      return;
+    }
+
+    if (genre === OTHER_GENRE_SENTINEL && !customGenre.trim()) {
+      setError('Type in your genre, or pick one from the list instead.');
       setErrorDetail(null);
       return;
     }
@@ -88,15 +102,24 @@ export default function GoMarketScreen() {
     setErrorDetail(null);
     setPkg(null);
     try {
+      // Afroeurofantasy is a coined subgenre the model has never seen in
+      // training, so it needs an explicit primer grounding it in the real
+      // definitional rules -- otherwise it defaults to generic "African
+      // magic meets European magic" copy. See constants/afroeurofantasy.ts.
+      const afroPrimer =
+        genre === AFROEUROFANTASY_GENRE
+          ? buildAfroeurofantasyPrimer(africanTradition, europeanTradition) + '\n\n'
+          : '';
+
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: `You are an expert indie book marketing strategist. Generate a complete marketing package for a book launch.
+          prompt: `${afroPrimer}You are an expert indie book marketing strategist. Generate a complete marketing package for a book launch.
 
 Book details:
 - Title: "${title}"
-- Genre: ${genre}
+- Genre: ${effectiveGenre}
 - Blurb: ${blurb || 'Not provided'}
 - Launch date: ${launchDate || 'Coming soon'}
 
@@ -204,11 +227,17 @@ Respond in valid JSON only (no markdown):
               onChangeText={setTitle}
             />
 
-           <GenrePicker
-  category={genreCategory}
-  genre={genre}
-  onChange={(cat, g) => { setGenreCategory(cat); setGenre(g); }}
-/>
+            <GenrePicker
+              category={genreCategory}
+              genre={genre}
+              onChange={(cat, g) => { setGenreCategory(cat); setGenre(g); }}
+              customGenre={customGenre}
+              onCustomGenreChange={setCustomGenre}
+              africanTradition={africanTradition}
+              onAfricanTraditionChange={setAfricanTradition}
+              europeanTradition={europeanTradition}
+              onEuropeanTraditionChange={setEuropeanTradition}
+            />
 
             <Text style={styles.inputLabel}>Blurb <Text style={styles.optional}>(recommended)</Text></Text>
             <TextInput

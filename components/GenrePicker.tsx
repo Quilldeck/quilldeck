@@ -1,14 +1,38 @@
-import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { GENRE_CATEGORIES, SUBGENRES, GenreCategory } from '../constants/genres';
+﻿import { useState } from 'react';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { GENRE_CATEGORIES, SUBGENRES, GenreCategory, OTHER_GENRE_SENTINEL } from '../constants/genres';
+import { AFROEUROFANTASY_GENRE } from '../constants/afroeurofantasy';
 
 interface GenrePickerProps {
   category: GenreCategory | '';
   genre: string;
   onChange: (category: GenreCategory, genre: string) => void;
+
+  // Shown only when genre === OTHER_GENRE_SENTINEL, so an author can name a
+  // genre that isn't in the list yet rather than being blocked.
+  customGenre?: string;
+  onCustomGenreChange?: (value: string) => void;
+
+  // Shown only when genre === AFROEUROFANTASY_GENRE. Both optional -- the
+  // Afroeurofantasy primer (see constants/afroeurofantasy.ts) works even
+  // when these are left blank, just less specifically.
+  africanTradition?: string;
+  onAfricanTraditionChange?: (value: string) => void;
+  europeanTradition?: string;
+  onEuropeanTraditionChange?: (value: string) => void;
 }
 
-export default function GenrePicker({ category, genre, onChange }: GenrePickerProps) {
+export default function GenrePicker({
+  category,
+  genre,
+  onChange,
+  customGenre,
+  onCustomGenreChange,
+  africanTradition,
+  onAfricanTraditionChange,
+  europeanTradition,
+  onEuropeanTraditionChange,
+}: GenrePickerProps) {
   const [openCategory, setOpenCategory] = useState(false);
   const [openGenre, setOpenGenre] = useState(false);
 
@@ -89,6 +113,42 @@ export default function GenrePicker({ category, genre, onChange }: GenrePickerPr
           )}
         </>
       )}
+
+      {/* Free-text fallback — only shown when "Other" is selected */}
+      {genre === OTHER_GENRE_SENTINEL && (
+        <>
+          <Text style={styles.inputLabel}>Specify your genre</Text>
+          <TextInput
+            style={styles.textInput}
+            value={customGenre}
+            onChangeText={onCustomGenreChange}
+            placeholder="e.g. Solarpunk Heist"
+            placeholderTextColor="#555577"
+          />
+        </>
+      )}
+
+      {/* Tradition pairing — only shown when Afroeurofantasy is selected */}
+      {genre === AFROEUROFANTASY_GENRE && (
+        <>
+          <Text style={styles.inputLabel}>African tradition (optional)</Text>
+          <TextInput
+            style={styles.textInput}
+            value={africanTradition}
+            onChangeText={onAfricanTraditionChange}
+            placeholder="e.g. Yoruba"
+            placeholderTextColor="#555577"
+          />
+          <Text style={styles.inputLabel}>European tradition (optional)</Text>
+          <TextInput
+            style={styles.textInput}
+            value={europeanTradition}
+            onChangeText={onEuropeanTraditionChange}
+            placeholder="e.g. Anglo-Saxon"
+            placeholderTextColor="#555577"
+          />
+        </>
+      )}
     </View>
   );
 }
@@ -106,4 +166,5 @@ const styles = StyleSheet.create({
   genreOptionSelected: { backgroundColor: '#2A1A00' },
   genreOptionText: { color: '#8888AA', fontSize: 14 },
   genreOptionTextSelected: { color: '#E8A838', fontWeight: '700' },
+  textInput: { backgroundColor: '#0F0F1A', borderRadius: 10, borderWidth: 1, borderColor: '#2A2A44', padding: 14, color: '#F5F5F5', fontSize: 15 },
 });
