@@ -103,6 +103,25 @@ export default function HomeScreen() {
             <Text style={styles.cardArrow}>›</Text>
           </TouchableOpacity>
 
+          {/* KDP Metadata Card */}
+          <TouchableOpacity
+            style={styles.featureCard}
+            onPress={() => router.push('/kdp-metadata')}
+            activeOpacity={0.85}
+          >
+            <View style={styles.cardIconWrap}>
+              <Text style={styles.cardIcon}>🏷️</Text>
+            </View>
+            <View style={styles.cardBody}>
+              <Text style={styles.cardTitle}>KDP Metadata Helper</Text>
+              <Text style={styles.cardDesc}>
+                7 categories, 7 keywords, and a listing preview — title,
+                subtitle, and selling points. Ready to paste into KDP.
+              </Text>
+            </View>
+            <Text style={styles.cardArrow}>›</Text>
+          </TouchableOpacity>
+
           {/* Go Market Card */}
           <TouchableOpacity
             style={[styles.featureCard, styles.featureCardHero]}
