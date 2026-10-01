@@ -27,12 +27,19 @@ interface PriceOption {
   period: string;
 }
 
+// `soon: true` marks a promised feature that isn't built yet, so the card
+// can show it honestly with a "Coming soon" tag rather than over-promising.
+interface Feature {
+  text: string;
+  soon?: boolean;
+}
+
 interface Tier {
   id: TierId;
   name: string;
   description: string;
   color: string;
-  features: string[];
+  features: Feature[];
   // Publisher License is the only tier with a monthly/yearly choice.
   prices: { default: PriceOption } | Record<Billing, PriceOption>;
 }
@@ -49,8 +56,8 @@ const TIERS: Tier[] = [
     color: '#8888AA',
     prices: { default: { usdc: 0, period: 'forever' } },
     features: [
-      'Basic AI blurb generation',
-      'Try Go Market This and KDP Metadata Helper once',
+      { text: 'Basic AI blurb generation' },
+      { text: 'Try Go Market This and KDP Metadata Helper once' },
     ],
   },
   {
@@ -60,11 +67,11 @@ const TIERS: Tier[] = [
     color: '#14F195',
     prices: { default: { usdc: 59, period: 'per launch' } },
     features: [
-      '1 book',
-      '14-day posting calendar',
-      'Complete marketing package (Go Market This)',
-      'All 3 AI blurb variants',
-      'KDP Metadata Helper',
+      { text: '1 book' },
+      { text: '14-day posting calendar' },
+      { text: 'Complete marketing package (Go Market This)' },
+      { text: 'All 3 AI blurb variants' },
+      { text: 'KDP Metadata Helper' },
     ],
   },
   {
@@ -74,10 +81,10 @@ const TIERS: Tier[] = [
     color: '#9945FF',
     prices: { default: { usdc: 149, period: 'per year' } },
     features: [
-      'Everything in Launch Pass',
-      '90-day rolling calendar',
-      'Multiple backlists',
-      'Priority access',
+      { text: 'Everything in Launch Pass' },
+      { text: '90-day rolling calendar', soon: true },
+      { text: 'Multiple backlists', soon: true },
+      { text: 'Priority access', soon: true },
     ],
   },
   {
@@ -90,10 +97,10 @@ const TIERS: Tier[] = [
       yearly: { usdc: 2499, period: 'per year' },
     },
     features: [
-      'Everything in Pro Annual',
-      '365-day calendar',
-      'White-labelled exports',
-      'Clients never touch the dashboard',
+      { text: 'Everything in Pro Annual' },
+      { text: '365-day calendar', soon: true },
+      { text: 'White-labelled exports', soon: true },
+      { text: 'Clients never touch the dashboard', soon: true },
     ],
   },
 ];
@@ -287,7 +294,12 @@ export default function SubscriptionScreen() {
                   {tier.features.map((f, i) => (
                     <View key={i} style={styles.featureRow}>
                       <Text style={[styles.featureCheck, { color: tier.color }]}>✓</Text>
-                      <Text style={styles.featureText}>{f}</Text>
+                      <Text style={styles.featureText}>
+                        {f.text}
+                        {f.soon ? (
+                          <Text style={styles.soonTag}>{'  '}COMING SOON</Text>
+                        ) : null}
+                      </Text>
                     </View>
                   ))}
                 </View>
@@ -394,6 +406,7 @@ const styles = StyleSheet.create({
   featureRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
   featureCheck: { fontSize: 13, fontWeight: '700', marginTop: 1 },
   featureText: { fontSize: 13, color: '#8888AA', flex: 1, lineHeight: 18 },
+  soonTag: { fontSize: 10, fontWeight: '700', color: '#6E6E99', letterSpacing: 0.5 },
 
   errorCard: { backgroundColor: '#2A0F14', borderRadius: 14, borderWidth: 1, borderColor: '#FF5C5C', padding: 16, marginBottom: 16 },
   errorTitle: { color: '#FF8A8A', fontSize: 13, fontWeight: '600', lineHeight: 19 },
