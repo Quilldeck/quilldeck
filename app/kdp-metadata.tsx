@@ -17,6 +17,7 @@ import { useRouter } from 'expo-router';
 import GenrePicker from '../components/GenrePicker';
 import { GenreCategory, OTHER_GENRE_SENTINEL } from '../constants/genres';
 import { AFROEUROFANTASY_GENRE, buildAfroeurofantasyPrimer } from '../constants/afroeurofantasy';
+import { useSubscription } from '../src/hooks/useSubscription';
 
 interface Metadata {
   categories: string[];
@@ -34,6 +35,7 @@ const SECTION_CONFIG: Record<SectionKey, { label: string; color: string; bg: str
 
 export default function KdpMetadataScreen() {
   const router = useRouter();
+  const { isPro, checkAndUseMetadata, metadataRemaining } = useSubscription();
   const [title, setTitle] = useState('');
   const [genreCategory, setGenreCategory] = useState<GenreCategory | ''>('');
   const [genre, setGenre] = useState('');
@@ -63,6 +65,14 @@ export default function KdpMetadataScreen() {
       setError('Type in your genre, or pick one from the list instead.');
       setErrorDetail(null);
       return;
+    }
+
+    if (!isPro) {
+      const allowed = await checkAndUseMetadata();
+      if (!allowed) {
+        router.push('/subscription');
+        return;
+      }
     }
 
     setLoading(true);
@@ -183,6 +193,14 @@ Respond in this exact JSON format (no markdown, no backticks):
             <Text style={styles.subtitle}>Categories, keywords and listing copy</Text>
           </View>
         </View>
+
+        {!isPro && (
+          <View style={styles.freeBanner}>
+            <Text style={styles.freeBannerText}>
+              Free trial · {metadataRemaining} generation{metadataRemaining === 1 ? '' : 's'} left
+            </Text>
+          </View>
+        )}
 
         {/* Input Card */}
         <View style={styles.inputCard}>
@@ -308,6 +326,9 @@ const styles = StyleSheet.create({
   headerText: { flex: 1 },
   title: { fontSize: 22, fontWeight: '800', color: '#F5F5F5' },
   subtitle: { fontSize: 13, color: '#8888AA', marginTop: 2 },
+
+  freeBanner: { backgroundColor: '#0D0D1F', borderRadius: 10, borderWidth: 1, borderColor: '#1A1A3A', padding: 12, marginBottom: 20, alignItems: 'center' },
+  freeBannerText: { fontSize: 12, color: '#9945FF', fontWeight: '500' },
 
   inputCard: { backgroundColor: '#1E1E32', borderRadius: 16, borderWidth: 1, borderColor: '#2A2A44', padding: 18, marginBottom: 24, gap: 10 },
   inputLabel: { fontSize: 12, fontWeight: '700', color: '#8888AA', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: -4 },

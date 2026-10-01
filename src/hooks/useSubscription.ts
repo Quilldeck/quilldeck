@@ -3,11 +3,14 @@ import {
   getSubscription,
   canUseBlurb,
   canUseMarketing,
+  canUseMetadata,
   incrementBlurbUsage,
   incrementMarketingUsage,
+  incrementMetadataUsage,
   unlockPro,
   FREE_BLURB_LIMIT,
   FREE_MARKETING_LIMIT,
+  FREE_METADATA_LIMIT,
   type SubscriptionState,
 } from '../subscriptionService';
 
@@ -16,6 +19,7 @@ export function useSubscription() {
     tier: 'free',
     blurbsUsed: 0,
     marketingUsed: 0,
+    metadataUsed: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -45,6 +49,14 @@ export function useSubscription() {
     return true;
   }, []);
 
+  const checkAndUseMetadata = useCallback(async (): Promise<boolean> => {
+    const allowed = await canUseMetadata();
+    if (!allowed) return false;
+    const updated = await incrementMetadataUsage();
+    setSubscription(updated);
+    return true;
+  }, []);
+
   const activatePro = useCallback(async (
     walletAddress: string,
     txSignature: string,
@@ -60,6 +72,9 @@ export function useSubscription() {
   const marketingRemaining = isPro
     ? Infinity
     : Math.max(0, FREE_MARKETING_LIMIT - subscription.marketingUsed);
+  const metadataRemaining = isPro
+    ? Infinity
+    : Math.max(0, FREE_METADATA_LIMIT - subscription.metadataUsed);
 
   return {
     subscription,
@@ -67,8 +82,10 @@ export function useSubscription() {
     isPro,
     blurbsRemaining,
     marketingRemaining,
+    metadataRemaining,
     checkAndUseBlurb,
     checkAndUseMarketing,
+    checkAndUseMetadata,
     activatePro,
     refresh,
   };
