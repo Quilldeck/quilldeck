@@ -15,6 +15,5 @@ export class AppConfig {
 
   static FREE_BLURB_LIMIT = 3;
   static FREE_MARKETING_LIMIT = 1;
-  static SUBSCRIPTION_PRICE_USDC = 4.99;
   static API_BASE_URL = 'https://quilldeck-api.vercel.app/api';
 }

@@ -255,13 +255,13 @@ Respond in this exact JSON format (no markdown, no backticks):
                   <View key={blurb.variant} style={styles.lockedCard}>
                     <Text style={styles.lockedIcon}>🔒</Text>
                     <Text style={styles.lockedTitle}>{config.label}</Text>
-                    <Text style={styles.lockedSub}>Unlock all 3 variants with Pro</Text>
+                    <Text style={styles.lockedSub}>Unlock all 3 variants with a Launch Pass</Text>
                     <TouchableOpacity
                       style={styles.unlockBtn}
                       onPress={() => router.push('/subscription')}
                       activeOpacity={0.85}
                     >
-                      <Text style={styles.unlockBtnText}>Unlock with Pro →</Text>
+                      <Text style={styles.unlockBtnText}>Get a Launch Pass →</Text>
                     </TouchableOpacity>
                   </View>
                 );

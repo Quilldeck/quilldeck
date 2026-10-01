@@ -14,84 +14,106 @@ import { useRouter } from 'expo-router';
 import { payWithSolana } from '../solanaPayment';
 import { unlockPro } from '../subscriptionService';
 
-const TIERS = [
+// Pricing mirrors pitch deck Slide 5. USDC is the anchor price; the card
+// price is derived from it so the "15% off with USDC" promise always holds.
+const USDC_DISCOUNT = 0.15;
+const cardPriceFor = (usdc: number) => Math.round((usdc / (1 - USDC_DISCOUNT)) * 100) / 100;
+
+type TierId = 'free' | 'launch' | 'pro-annual' | 'publisher';
+type Billing = 'monthly' | 'yearly';
+
+interface PriceOption {
+  usdc: number;
+  period: string;
+}
+
+interface Tier {
+  id: TierId;
+  name: string;
+  description: string;
+  color: string;
+  features: string[];
+  // Publisher License is the only tier with a monthly/yearly choice.
+  prices: { default: PriceOption } | Record<Billing, PriceOption>;
+}
+
+// NOTE: "per launch" / "1 book" / "per year" are display copy only for now.
+// Any paid purchase still calls unlockPro(), which flips one device-wide
+// "pro" flag and unlocks everything indefinitely. Real per-book entitlements
+// and tier expiry are a known post-hackathon item.
+const TIERS: Tier[] = [
+  {
+    id: 'free',
+    name: 'Free',
+    description: 'Basic AI blurb generation',
+    color: '#8888AA',
+    prices: { default: { usdc: 0, period: 'forever' } },
+    features: [
+      'Basic AI blurb generation',
+      'Try Go Market This and KDP Metadata Helper once',
+    ],
+  },
   {
     id: 'launch',
-    name: 'Launch',
-    price: 29,
-    priceUSDC: 24.65,
-    period: 'one-off',
-    description: 'Perfect for your first book launch',
-    community: 'The Debut Lounge',
+    name: 'Launch Pass',
+    description: '1 book. 14-day posting calendar + complete marketing package.',
     color: '#14F195',
+    prices: { default: { usdc: 59, period: 'per launch' } },
     features: [
-      '3 AI Blurb variants',
-      'Go Market This package',
+      '1 book',
       '14-day posting calendar',
-      '5 promo site recommendations',
+      'Complete marketing package (Go Market This)',
+      'All 3 AI blurb variants',
       'KDP Metadata Helper',
-      'The Debut Lounge community',
     ],
   },
   {
-    id: 'campaign',
-    name: 'Campaign',
-    price: 39,
-    priceUSDC: 33.15,
-    period: 'one-off',
-    description: 'For the intentional, strategic author',
-    community: 'The Author\'s Table',
+    id: 'pro-annual',
+    name: 'Pro Annual',
+    description: '90-day rolling calendar. Multiple backlists + priority access.',
     color: '#9945FF',
+    prices: { default: { usdc: 149, period: 'per year' } },
     features: [
-      'Everything in Launch',
-      '30-day posting calendar',
-      'Extended email sequences',
-      'Platform analytics guidance',
-      'The Author\'s Table community',
+      'Everything in Launch Pass',
+      '90-day rolling calendar',
+      'Multiple backlists',
+      'Priority access',
     ],
   },
   {
-    id: 'command',
-    name: 'Command',
-    price: 59,
-    priceUSDC: 50.15,
-    period: 'one-off',
-    description: 'Be your own marketing manager',
-    community: 'The Marketing Room',
+    id: 'publisher',
+    name: 'Publisher License',
+    description: 'Start your own marketing agency.',
     color: '#E8A838',
+    prices: {
+      monthly: { usdc: 299, period: 'per month' },
+      yearly: { usdc: 2499, period: 'per year' },
+    },
     features: [
-      'Everything in Campaign',
-      '90-day posting calendar',
-      'Promo site submission deadlines',
-      'Amazon ad refresh variants',
-      'The Marketing Room community',
-    ],
-  },
-  {
-    id: 'studio',
-    name: 'Studio',
-    price: 249,
-    priceUSDC: 211.65,
-    period: 'per year',
-    description: 'Book Marketing Agency in a Box',
-    community: 'The Boardroom',
-    color: '#FF6B35',
-    badge: 'FOUNDING MEMBER — 200 ONLY',
-    features: [
-      'Unlimited book projects',
-      '12-month calendar per project',
-      'Series awareness across catalogue',
-      'Agency dashboard',
-      'Break even after one client',
-      'The Boardroom community',
-      'Shape every future version',
+      'Everything in Pro Annual',
+      '365-day calendar',
+      'White-labelled exports',
+      'Clients never touch the dashboard',
     ],
   },
 ];
 
+function priceFor(tier: Tier, billing: Billing): PriceOption {
+  return 'default' in tier.prices ? tier.prices.default : tier.prices[billing];
+}
+
+// $69.41, $2,940 -- whole amounts drop the cents, everything gets commas.
+function formatUSD(amount: number): string {
+  const fixed = Number.isInteger(amount) ? amount.toFixed(0) : amount.toFixed(2);
+  const [whole, cents] = fixed.split('.');
+  const withCommas = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `$${cents ? `${withCommas}.${cents}` : withCommas}`;
+}
+
 export default function SubscriptionScreen() {
   const router = useRouter();
-  const [selectedTier, setSelectedTier] = useState('command');
+  const [selectedTier, setSelectedTier] = useState<TierId>('launch');
+  const [publisherBilling, setPublisherBilling] = useState<Billing>('monthly');
   const [paying, setPaying] = useState(false);
   const [paid, setPaid] = useState(false);
   const [useCrypto, setUseCrypto] = useState(true);
@@ -99,8 +121,16 @@ export default function SubscriptionScreen() {
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const selected = TIERS.find(t => t.id === selectedTier)!;
+  const selectedPrice = priceFor(selected, publisherBilling);
+  const selectedCard = cardPriceFor(selectedPrice.usdc);
+  const isFree = selected.id === 'free';
 
   const handlePayment = async () => {
+    if (isFree) {
+      router.back();
+      return;
+    }
+
     if (!useCrypto) {
       Alert.alert('Coming soon', 'Card payment isn\'t available yet — pay with Solana for now.');
       return;
@@ -110,7 +140,7 @@ export default function SubscriptionScreen() {
     setPaymentError(null);
 
     try {
-      const result = await payWithSolana(selected.priceUSDC);
+      const result = await payWithSolana(selectedPrice.usdc);
       await unlockPro(result.walletAddress, result.txSignature);
       setTxSignature(result.txSignature);
       setPaid(true);
@@ -130,7 +160,7 @@ export default function SubscriptionScreen() {
           <Text style={styles.successTitle}>Welcome to {selected.name}</Text>
           <Text style={styles.successSub}>
             Your payment was confirmed on Solana.{'\n'}
-            {selected.community} is waiting for you.
+            Time to get your book in front of readers.
           </Text>
           <View style={styles.txCard}>
             <Text style={styles.txLabel}>Transaction confirmed</Text>
@@ -154,13 +184,13 @@ export default function SubscriptionScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-<View style={styles.header}>
+        <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
             <Text style={styles.backArrow}>←</Text>
           </TouchableOpacity>
           <View style={styles.headerText}>
             <Text style={styles.title}>Choose Your Plan</Text>
-            <Text style={styles.subtitle}>One-off payment. No hidden fees.</Text>
+            <Text style={styles.subtitle}>Per launch, yearly or monthly. No hidden fees.</Text>
           </View>
         </View>
 
@@ -199,51 +229,71 @@ export default function SubscriptionScreen() {
 
         {/* Tier Cards */}
         <View style={styles.tiers}>
-          {TIERS.map((tier) => (
-            <TouchableOpacity
-              key={tier.id}
-              style={[
-                styles.tierCard,
-                { borderColor: selectedTier === tier.id ? tier.color : '#2A2A44' },
-                selectedTier === tier.id && styles.tierCardSelected,
-              ]}
-              onPress={() => setSelectedTier(tier.id)}
-              activeOpacity={0.85}
-            >
-              {tier.badge && (
-                <View style={[styles.tierBadge, { backgroundColor: tier.color }]}>
-                  <Text style={styles.tierBadgeText}>{tier.badge}</Text>
-                </View>
-              )}
-
-              <View style={styles.tierHeader}>
-                <View>
-                  <Text style={[styles.tierName, { color: tier.color }]}>{tier.name}</Text>
-                  <Text style={styles.tierDesc}>{tier.description}</Text>
-                </View>
-                <View style={styles.tierPricing}>
-                  <Text style={styles.tierPrice}>
-                    {useCrypto
-                      ? `$${tier.priceUSDC} USDC`
-                      : `$${tier.price}`}
-                  </Text>
-                  <Text style={styles.tierPeriod}>{tier.period}</Text>
-                  {useCrypto && (
-                    <Text style={styles.tierOriginal}>${tier.price}</Text>
-                  )}
-                </View>
-              </View>
-
-              <View style={styles.tierFeatures}>
-                {tier.features.map((f, i) => (
-                  <View key={i} style={styles.featureRow}>
-                    <Text style={[styles.featureCheck, { color: tier.color }]}>✓</Text>
-                    <Text style={styles.featureText}>{f}</Text>
+          {TIERS.map((tier) => {
+            const price = priceFor(tier, publisherBilling);
+            const card = cardPriceFor(price.usdc);
+            const tierIsFree = price.usdc === 0;
+            return (
+              <TouchableOpacity
+                key={tier.id}
+                style={[
+                  styles.tierCard,
+                  { borderColor: selectedTier === tier.id ? tier.color : '#2A2A44' },
+                  selectedTier === tier.id && styles.tierCardSelected,
+                ]}
+                onPress={() => setSelectedTier(tier.id)}
+                activeOpacity={0.85}
+              >
+                <View style={styles.tierHeader}>
+                  <View style={styles.tierTitleBlock}>
+                    <Text style={[styles.tierName, { color: tier.color }]}>{tier.name}</Text>
+                    <Text style={styles.tierDesc}>{tier.description}</Text>
                   </View>
-                ))}
-              </View>
-            </TouchableOpacity>
-          ))}
+                  <View style={styles.tierPricing}>
+                    <Text style={styles.tierPrice}>
+                      {tierIsFree
+                        ? '$0'
+                        : useCrypto
+                          ? `${formatUSD(price.usdc)} USDC`
+                          : formatUSD(card)}
+                    </Text>
+                    <Text style={styles.tierPeriod}>{price.period}</Text>
+                    {useCrypto && !tierIsFree && (
+                      <Text style={styles.tierOriginal}>{formatUSD(card)}</Text>
+                    )}
+                  </View>
+                </View>
+
+                {'monthly' in tier.prices && (
+                  <View style={styles.billingToggle}>
+                    {(['monthly', 'yearly'] as Billing[]).map((b) => (
+                      <TouchableOpacity
+                        key={b}
+                        style={[
+                          styles.billingOption,
+                          publisherBilling === b && { backgroundColor: tier.color },
+                        ]}
+                        onPress={() => { setPublisherBilling(b); setSelectedTier(tier.id); }}
+                      >
+                        <Text style={[styles.billingText, publisherBilling === b && styles.billingTextActive]}>
+                          {b === 'monthly' ? 'Monthly' : 'Yearly'}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+
+                <View style={styles.tierFeatures}>
+                  {tier.features.map((f, i) => (
+                    <View key={i} style={styles.featureRow}>
+                      <Text style={[styles.featureCheck, { color: tier.color }]}>✓</Text>
+                      <Text style={styles.featureText}>{f}</Text>
+                    </View>
+                  ))}
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {/* Error */}
@@ -257,11 +307,16 @@ export default function SubscriptionScreen() {
         <View style={styles.paymentSection}>
           <View style={styles.paymentSummary}>
             <Text style={styles.paymentSummaryText}>
-              {selected.name} · {useCrypto ? `$${selected.priceUSDC} USDC` : `$${selected.price}`}
+              {selected.name} · {isFree
+                ? '$0'
+                : useCrypto
+                  ? `${formatUSD(selectedPrice.usdc)} USDC`
+                  : formatUSD(selectedCard)}
+              {isFree ? '' : ` ${selectedPrice.period}`}
             </Text>
-            {useCrypto && (
+            {useCrypto && !isFree && (
               <Text style={styles.paymentSaving}>
-                You save ${(selected.price - selected.priceUSDC).toFixed(2)}
+                You save {formatUSD(Math.round((selectedCard - selectedPrice.usdc) * 100) / 100)}
               </Text>
             )}
           </View>
@@ -279,12 +334,14 @@ export default function SubscriptionScreen() {
               </View>
             ) : (
               <Text style={styles.payBtnText}>
-                {useCrypto ? '◎ Pay with Solana' : '💳 Pay Now'} · {selected.name}
+                {isFree
+                  ? 'Continue with Free'
+                  : `${useCrypto ? '◎ Pay with Solana' : '💳 Pay Now'} · ${selected.name}`}
               </Text>
             )}
           </TouchableOpacity>
 
-          {useCrypto && (
+          {useCrypto && !isFree && (
             <Text style={styles.payNote}>
               Secured by Seed Vault · Zero platform commission
             </Text>
@@ -321,15 +378,18 @@ const styles = StyleSheet.create({
   tiers: { gap: 14, marginBottom: 24 },
   tierCard: { backgroundColor: '#1E1E32', borderRadius: 16, borderWidth: 1.5, padding: 18, gap: 14 },
   tierCardSelected: { backgroundColor: '#1A1A2E' },
-  tierBadge: { borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' },
-  tierBadgeText: { fontSize: 10, color: '#0F0F1A', fontWeight: '800', letterSpacing: 0.5 },
-  tierHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  tierHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
+  tierTitleBlock: { flex: 1 },
   tierName: { fontSize: 18, fontWeight: '800' },
   tierDesc: { fontSize: 12, color: '#8888AA', marginTop: 2 },
   tierPricing: { alignItems: 'flex-end' },
   tierPrice: { fontSize: 16, fontWeight: '800', color: '#F5F5F5' },
   tierPeriod: { fontSize: 11, color: '#8888AA' },
   tierOriginal: { fontSize: 11, color: '#555577', textDecorationLine: 'line-through' },
+  billingToggle: { flexDirection: 'row', alignSelf: 'flex-start', backgroundColor: '#0F0F1A', borderRadius: 8, borderWidth: 1, borderColor: '#2A2A44', padding: 3, gap: 3 },
+  billingOption: { paddingVertical: 6, paddingHorizontal: 14, borderRadius: 6 },
+  billingText: { fontSize: 12, color: '#8888AA', fontWeight: '700' },
+  billingTextActive: { color: '#0F0F1A' },
   tierFeatures: { gap: 8 },
   featureRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
   featureCheck: { fontSize: 13, fontWeight: '700', marginTop: 1 },

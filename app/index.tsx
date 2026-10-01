@@ -154,11 +154,11 @@ export default function HomeScreen() {
             </View>
             <View style={styles.cardBody}>
               <Text style={[styles.cardTitle, styles.cardTitlePro]}>
-                Upgrade to Pro
+                Plans & Pricing
               </Text>
               <Text style={[styles.cardDesc, styles.cardDescPro]}>
-                Unlock unlimited blurbs and marketing packages. Pay with
-                Solana — zero platform commission.
+                Launch Pass from $59 USDC per book, up to Publisher License
+                for agencies. Pay with Solana — zero platform commission.
               </Text>
             </View>
             <Text style={[styles.cardArrow, styles.cardArrowPro]}>›</Text>

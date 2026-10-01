@@ -7,9 +7,6 @@ export const TAOSCOPE_WALLET = 'F9BCATy9pv5M8p14uwht5j4guY9gG9Da6ZYdvqJbiLr8';
 // Devnet USDC mint
 export const USDC_MINT_DEVNET = '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU';
 
-// Subscription price in USDC (lamports: 4.99 USDC = 4990000 micro-USDC)
-export const SUBSCRIPTION_PRICE_USDC = 4.99;
-
 // Free tier limits
 export const FREE_BLURB_LIMIT = 3;
 export const FREE_MARKETING_LIMIT = 1;

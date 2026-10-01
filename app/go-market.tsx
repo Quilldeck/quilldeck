@@ -444,13 +444,13 @@ Respond in valid JSON only (no markdown):
                   <View style={styles.lockedCard}>
                     <Text style={styles.lockedIcon}>🔒</Text>
                     <Text style={styles.lockedTitle}>{pkg.calendar.length - 1} MORE DAYS</Text>
-                    <Text style={styles.lockedSub}>Unlock the full 14-day calendar with Pro</Text>
+                    <Text style={styles.lockedSub}>Unlock the full 14-day calendar with a Launch Pass</Text>
                     <TouchableOpacity
                       style={styles.unlockBtn}
                       onPress={() => router.push('/subscription')}
                       activeOpacity={0.85}
                     >
-                      <Text style={styles.unlockBtnText}>Unlock with Pro →</Text>
+                      <Text style={styles.unlockBtnText}>Get a Launch Pass →</Text>
                     </TouchableOpacity>
                   </View>
                 )}
