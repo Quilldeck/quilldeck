@@ -6,7 +6,7 @@ import { AppProviders } from '@/components/app-providers'
 export default function RootLayout() {
   return (
     <AppProviders>
-      <Stack>
+      <Stack screenOptions={{ contentStyle: { backgroundColor: '#0F0F1A' } }}>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="blurb-generator" options={{ headerShown: false }} />
         <Stack.Screen name="go-market" options={{ headerShown: false }} />
