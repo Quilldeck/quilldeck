@@ -11,6 +11,7 @@ export default function RootLayout() {
         <Stack.Screen name="blurb-generator" options={{ headerShown: false }} />
         <Stack.Screen name="go-market" options={{ headerShown: false }} />
         <Stack.Screen name="kdp-metadata" options={{ headerShown: false }} />
+        <Stack.Screen name="subscription" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
     </AppProviders>

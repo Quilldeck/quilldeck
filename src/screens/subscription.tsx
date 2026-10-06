@@ -2,13 +2,13 @@
 import {
   ActivityIndicator,
   Alert,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 import { payWithSolana } from '../solanaPayment';
@@ -196,7 +196,7 @@ export default function SubscriptionScreen() {
             <Text style={styles.backArrow}>←</Text>
           </TouchableOpacity>
           <View style={styles.headerText}>
-            <Text style={styles.title}>Choose Your Plan</Text>
+            <Text style={styles.title}>Plans & Pricing</Text>
             <Text style={styles.subtitle}>Per launch, yearly or monthly. No hidden fees.</Text>
           </View>
         </View>

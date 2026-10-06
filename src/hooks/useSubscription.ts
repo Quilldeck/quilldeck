@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import {
   getSubscription,
   canUseBlurb,
@@ -29,9 +30,14 @@ export function useSubscription() {
     setLoading(false);
   }, []);
 
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
+  // Re-read on every focus, not just on mount: these screens stay mounted
+  // under /subscription, so after a purchase the user comes back to a screen
+  // whose isPro is stale. Refreshing on focus unlocks locked content at once.
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh]),
+  );
 
   const checkAndUseBlurb = useCallback(async (): Promise<boolean> => {
     const allowed = await canUseBlurb();
